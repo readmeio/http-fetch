@@ -83,7 +83,6 @@ app.post('/agent', async (req, res) => {
     })
     for await (const chunk of stream) {
       const resMsg = `data: ${JSON.stringify(chunk)}\n\n`
-      process.stdout.write(resMsg)
       res.write(resMsg)
     }
 
@@ -134,7 +133,6 @@ app.post('/agent', async (req, res) => {
       })
       // newlines at the start to ignore previous messages
       res.write(`\n\n`)
-      process.stdout.write(confirmationMsg)
       res.write(confirmationMsg)
       return res.write(`\n\n`)
     }
@@ -151,7 +149,13 @@ app.post('/agent', async (req, res) => {
       })
     }
 
-    console.error(e)
+    console.error(
+      JSON.stringify({
+        stack: finalError.stack?.replace(/\n   /g, ' |'),
+        message: finalError.message,
+      })
+    )
+
     res.write(finalError.generateCopilotError())
   } finally {
     res.end()
