@@ -153,6 +153,10 @@ app.post('/agent', async (req, res) => {
       JSON.stringify({
         stack: finalError.stack?.replace(/\n   /g, ' |'),
         message: finalError.message,
+        code: finalError.code,
+        type: finalError.type,
+        identifier: finalError.identifier,
+        originalError: finalError.originalError,
       })
     )
 
