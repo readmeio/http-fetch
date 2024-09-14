@@ -7,6 +7,8 @@ type ChatCompletionRequestArgs = {
   token: string
 }
 
+const MAX_RESPONSE_SIZE = 3750
+
 const tools: ChatCompletionTool[] = [
   {
     type: 'function',
@@ -71,7 +73,7 @@ async function fetchTool({ url, method, headers, body }: { url: string; method: 
       signal: controller.signal,
     })
     clearTimeout(timeoutId)
-    return res.text()
+    return res.text() || 'No response'
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') {
       throw new CopilotError({
@@ -115,8 +117,7 @@ export async function generateAgentResponse({ history, token }: GenerateAgentRes
     // this is to remove extra empty assistant message
     history.pop()
     const rawResponse = await fetchTool(confirm.confirmation.args as any)
-    const words = rawResponse.split(' ')
-    let response = words.slice(0, 1000).join(' ')
+    let response = rawResponse.slice(0, MAX_RESPONSE_SIZE)
     if (response.length < rawResponse.length) {
       response += '... (truncated)'
     }
