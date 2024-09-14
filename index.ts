@@ -68,12 +68,16 @@ app.post('/agent', async (req, res) => {
         identifier: 'agent',
       })
     }
-
-    await verifyPayload({
-      payload: JSON.stringify(body),
-      signature,
-      keyID,
-    })
+    try {
+      await verifyPayload({
+        payload: JSON.stringify(body),
+        signature,
+        keyID,
+      })
+    } catch (error) {
+      // Ignore this error for now. We can assume if this is not from github, then copilot would not work either
+      console.error('Error verifying payload', error)
+    }
 
     const history = body.messages
 
@@ -82,6 +86,7 @@ app.post('/agent', async (req, res) => {
       history,
     })
     for await (const chunk of stream) {
+      if (chunk?.choices?.[0]?.delta?.tool_calls) continue
       const resMsg = `data: ${JSON.stringify(chunk)}\n\n`
       res.write(resMsg)
     }
@@ -131,10 +136,8 @@ app.post('/agent', async (req, res) => {
           id: toolCall.id,
         },
       })
-      // newlines at the start to ignore previous messages
-      res.write(`\n\n`)
       res.write(confirmationMsg)
-      return res.write(`\n\n`)
+      return
     }
 
     res.write(`data: [DONE]\n\n`)

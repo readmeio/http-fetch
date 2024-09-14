@@ -60,13 +60,30 @@ type GenerateAgentResponseArgs = {
   token: string
 }
 async function fetchTool({ url, method, headers, body }: { url: string; method: string; headers: Record<string, string>; body: string }) {
-  const res = await fetch(url, {
-    method,
-    headers,
-    body,
-  })
+  const controller = new AbortController()
+  const timeoutId = setTimeout(() => controller.abort(), 5000)
 
-  return res.text()
+  try {
+    const res = await fetch(url, {
+      method,
+      headers,
+      body,
+      signal: controller.signal,
+    })
+    clearTimeout(timeoutId)
+    return res.text()
+  } catch (error) {
+    if (error instanceof Error && error.name === 'AbortError') {
+      throw new CopilotError({
+        type: CopilotErrorType.agent,
+        code: CopilotErrorCodes.githubError,
+        message: 'Request took too long',
+        identifier: 'fetch',
+        originalError: error,
+      })
+    }
+    throw error
+  }
 }
 export async function generateAgentResponse({ history, token }: GenerateAgentResponseArgs) {
   // The last message is the current users message. We remove it here and make a prompt from it.
@@ -97,7 +114,12 @@ export async function generateAgentResponse({ history, token }: GenerateAgentRes
     }
     // this is to remove extra empty assistant message
     history.pop()
-    const response = await fetchTool(confirm.confirmation.args as any)
+    const rawResponse = await fetchTool(confirm.confirmation.args as any)
+    const words = rawResponse.split(' ')
+    let response = words.slice(0, 1000).join(' ')
+    if (response.length < rawResponse.length) {
+      response += '... (truncated)'
+    }
     // add the response to the history
     history.push(currentMessage)
     history.push({
