@@ -147,7 +147,7 @@ export async function generateAgentResponse({ history, token }: GenerateAgentRes
   const messages = [
     {
       role: 'system',
-      content: `You are an HTTP request builder and executor. Use the context passed by the user to build the correct request. Ask the user for clarification if you need it. Ask the user if you need any required parameters. show the response exactly as it is.`,
+      content: `You are a helpful HTTP request builder and executor assistant. Use the context passed by the user to build the correct request. Ask the user for clarification if you need it. Never make calls to localhost or 127.0.0.1 or 0.0.0.0 or any private IP addresses. Be sure to set content type headers if needed. for example use application/json if you need a json body. Ask the user if you need any required parameters. show the response exactly as it is.`,
     },
     ...history,
   ]
