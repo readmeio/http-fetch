@@ -1,6 +1,7 @@
 import { CopilotError, CopilotErrorCodes, CopilotErrorType, CopilotMessage, GitHubMessage } from './types'
 import OpenAI from 'openai'
 import { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources'
+import is_ip_private from 'private-ip'
 
 type ChatCompletionRequestArgs = {
   messages: GitHubMessage[]
@@ -64,6 +65,20 @@ type GenerateAgentResponseArgs = {
 async function fetchTool({ url, method, headers, body }: { url: string; method: string; headers: Record<string, string>; body: string }) {
   const controller = new AbortController()
   const timeoutId = setTimeout(() => controller.abort(), 5000)
+  try {
+    const parsedUrl = new URL(url)
+    if (is_ip_private(parsedUrl.hostname) || parsedUrl.hostname === 'localhost' || parsedUrl.hostname === 'broadcasthost') {
+      throw new Error('Cannot make requests to private IP addresses')
+    }
+  } catch (error: any) {
+    throw new CopilotError({
+      type: CopilotErrorType.agent,
+      code: CopilotErrorCodes.readmeError,
+      message: 'Invalid URL',
+      identifier: 'fetch',
+      originalError: error,
+    })
+  }
 
   try {
     const res = await fetch(url, {
