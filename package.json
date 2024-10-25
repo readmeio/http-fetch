@@ -13,11 +13,12 @@
   "description": "",
   "dependencies": {
     "express": "^4.19.2",
-    "openai": "^4.57.0",
-    "private-ip": "^3.0.2"
+    "netmask": "^2.0.2",
+    "openai": "^4.57.0"
   },
   "devDependencies": {
     "@types/express": "^4.17.21",
+    "@types/netmask": "^2.0.5",
     "@types/node": "^22.5.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.5.4"

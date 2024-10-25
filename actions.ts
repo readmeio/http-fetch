@@ -1,7 +1,7 @@
 import { CopilotError, CopilotErrorCodes, CopilotErrorType, CopilotMessage, GitHubMessage } from './types'
 import OpenAI from 'openai'
 import { ChatCompletionMessageParam, ChatCompletionTool } from 'openai/resources'
-import is_ip_private from 'private-ip'
+import { isPrivateIp } from './ipCheck'
 
 type ChatCompletionRequestArgs = {
   messages: GitHubMessage[]
@@ -67,7 +67,8 @@ async function fetchTool({ url, method, headers, body }: { url: string; method: 
   const timeoutId = setTimeout(() => controller.abort(), 5000)
   try {
     const parsedUrl = new URL(url)
-    if (is_ip_private(parsedUrl.hostname) || parsedUrl.hostname === 'localhost' || parsedUrl.hostname === 'broadcasthost') {
+    // @ts-ignore
+    if (isPrivateIp(parsedUrl.hostname) || parsedUrl.hostname === 'localhost' || parsedUrl.hostname === 'broadcasthost') {
       throw new Error('Cannot make requests to private IP addresses')
     }
   } catch (error: any) {
